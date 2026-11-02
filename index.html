@@ -1,0 +1,91 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          <h1>Weatherly</h1>
+          <p>Your daily weather companion</p>
+        </div>
+
+        <div class="search-container">
+          <input
+            type="text"
+            id="cityInput"
+            placeholder="Search for a city..."
+          />
+          <button id="searchBtn">Search</button>
+        </div>
+      </header>
+
+      <!-- Loading and Error Messages -->
+      <p id="loading" class="message hidden">Loading weather data...</p>
+      <p id="error" class="message error hidden"></p>
+
+      <!-- Current Weather -->
+      <section class="current-weather" id="currentWeather">
+        <div class="weather-info">
+          <p class="location-label">CURRENT WEATHER</p>
+          <h2 id="cityName">Lagos</h2>
+          <p id="weatherDescription">Loading...</p>
+          <h1 id="temperature">--°C</h1>
+        </div>
+
+        <div class="weather-icon">
+          <img id="weatherIcon" src="" alt="Weather icon" />
+        </div>
+      </section>
+
+      <!-- Weather Details -->
+      <section class="weather-details">
+        <div class="detail-card">
+          <p>Feels Like</p>
+          <h3 id="feelsLike">--°C</h3>
+        </div>
+
+        <div class="detail-card">
+          <p>Humidity</p>
+          <h3 id="humidity">--%</h3>
+        </div>
+
+        <div class="detail-card">
+          <p>Wind Speed</p>
+          <h3 id="windSpeed">-- m/s</h3>
+        </div>
+      </section>
+
+      <!-- 3-Day Forecast -->
+      <section class="forecast-section">
+        <h2>3-Day Forecast</h2>
+
+        <div class="forecast-container" id="forecastContainer">
+          <!-- Forecast cards will be added with JavaScript -->
+        </div>
+      </section>
+
+      <!-- Multiple Cities -->
+      <section class="cities-section">
+        <h2>Popular Cities</h2>
+
+        <div class="cities-container" id="citiesContainer">
+          <!-- City cards will be added with JavaScript -->
+        </div>
+      </section>
+
+      <!-- Location Button -->
+      <button id="locationBtn" class="location-btn">
+        Use My Current Location
+      </button>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
