@@ -200,6 +200,16 @@ body {
   margin-bottom: 8px;
 }
 
+.city-card img {
+  width: 55px;
+  display: block;
+  margin: 5px 0;
+}
+
+.city-card h2 {
+  font-size: 25px;
+}
+
 .city-card p {
   color: #64748b;
   font-size: 14px;
@@ -263,5 +273,77 @@ button:hover {
 
   .weather-icon img {
     width: 90px;
+  }
+}
+
+/* Smooth transitions */
+.detail-card,
+.forecast-card,
+.city-card {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Card hover effects */
+.detail-card:hover,
+.forecast-card:hover,
+.city-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+}
+
+/* Button hover */
+.search-container button,
+.location-btn {
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.search-container button:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.location-btn:hover {
+  background: #334155;
+  transform: translateY(-2px);
+}
+
+/* Mobile improvements */
+@media (max-width: 480px) {
+  .current-weather {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .weather-icon img {
+    width: 75px;
+  }
+
+  .weather-info h2 {
+    font-size: 25px;
+  }
+
+  .weather-info h1 {
+    font-size: 38px;
+  }
+
+  .search-container button {
+    padding: 12px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

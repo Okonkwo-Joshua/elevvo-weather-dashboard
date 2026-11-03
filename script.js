@@ -2,9 +2,7 @@
 // 1. API CONFIGURATION
 // =====================================
 
-const API_KEY = "api-key";
-
-const BASE_URL = "https://api.openweathermap.org/data/2.5";
+const BASE_URL = "/.netlify/functions/weather";
 
 // =====================================
 // 2. SELECT HTML ELEMENTS
@@ -52,18 +50,16 @@ error.classList.remove("hidden");
 // =====================================
 
 async function getCurrentWeather(city) {
-const url = `${BASE_URL}/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
+    const url = `${BASE_URL}?type=current&city=${encodeURIComponent(city)}`;
 
+    const response = await fetch(url);
+    const data = await response.json();
 
-const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(data.message || "City not found. Please check the city name.");
+    }
 
-if (!response.ok) {
-    throw new Error("City not found. Please check the city name.");
-}
-
-return await response.json();
-
-
+    return data;
 }
 
 // =====================================
@@ -71,18 +67,34 @@ return await response.json();
 // =====================================
 
 async function getWeatherByCoordinates(lat, lon) {
-const url = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+    const url = `${BASE_URL}?type=current&lat=${lat}&lon=${lon}`;
 
+    const response = await fetch(url);
+    const data = await response.json();
 
-const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(data.message || "Unable to retrieve weather for your location.");
+    }
 
-if (!response.ok) {
-    throw new Error("Unable to retrieve weather for your location.");
+    return data;
 }
 
-return await response.json();
 
+// =====================================
+// 7. FETCH 5-DAY FORECAST
+// =====================================
 
+async function getForecast(lat, lon) {
+    const url = `${BASE_URL}?type=forecast&lat=${lat}&lon=${lon}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Unable to retrieve forecast data.");
+    }
+
+    return data;
 }
 
 // =====================================
@@ -111,25 +123,6 @@ humidity.textContent =
 
 windSpeed.textContent =
     `${data.wind.speed} m/s`;
-
-
-}
-
-// =====================================
-// 7. FETCH 5-DAY FORECAST
-// =====================================
-
-async function getForecast(lat, lon) {
-const url = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
-
-
-const response = await fetch(url);
-
-if (!response.ok) {
-    throw new Error("Unable to retrieve forecast data.");
-}
-
-return await response.json();
 
 
 }
