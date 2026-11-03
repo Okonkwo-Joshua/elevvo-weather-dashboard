@@ -1,87 +1,142 @@
 exports.handler = async (event) => {
-const API_KEY = process.env.OPENWEATHER_API_KEY;
 
+    try {
 
-if (!API_KEY) {
-    return {
-        statusCode: 500,
-        body: JSON.stringify({
-            error: "Weather API key is not configured."
-        })
-    };
-}
+        const API_KEY = process.env.OPENWEATHER_API_KEY;
 
-const { type, city, lat, lon } = event.queryStringParameters || {};
+        if (!API_KEY) {
 
-let endpoint;
+            return {
+                statusCode: 500,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    error: "Weather API key is not configured."
+                })
+            };
 
-if (type === "current" && city) {
-    endpoint = "weather";
-} else if (
-    type === "current" &&
-    lat !== undefined &&
-    lon !== undefined
-) {
-    endpoint = "weather";
-} else if (
-    type === "forecast" &&
-    lat !== undefined &&
-    lon !== undefined
-) {
-    endpoint = "forecast";
-} else {
-    return {
-        statusCode: 400,
-        body: JSON.stringify({
-            error: "Invalid weather request."
-        })
-    };
-}
+        }
 
-const params = new URLSearchParams({
-    appid: API_KEY,
-    units: "metric"
-});
+        const {
+            type,
+            city,
+            lat,
+            lon
+        } = event.queryStringParameters || {};
 
-if (city) {
-    params.set("q", city);
-} else {
-    params.set("lat", lat);
-    params.set("lon", lon);
-}
+        let endpoint;
 
-try {
-    const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/${endpoint}?${params}`
-    );
+        // Current weather by city
 
-    const data = await response.json();
+        if (type === "current" && city) {
 
-    if (!response.ok) {
+            endpoint = "weather";
+
+        }
+
+        // Current weather by coordinates
+
+        else if (
+            type === "current" &&
+            lat !== undefined &&
+            lon !== undefined
+        ) {
+
+            endpoint = "weather";
+
+        }
+
+        // Forecast by coordinates
+
+        else if (
+            type === "forecast" &&
+            lat !== undefined &&
+            lon !== undefined
+        ) {
+
+            endpoint = "forecast";
+
+        }
+
+        else {
+
+            return {
+                statusCode: 400,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    error: "Invalid weather request."
+                })
+            };
+
+        }
+
+        // Build API parameters
+
+        const params = new URLSearchParams({
+            appid: API_KEY,
+            units: "metric"
+        });
+
+        if (city && type === "current") {
+
+            params.set("q", city);
+
+        } else {
+
+            params.set("lat", lat);
+            params.set("lon", lon);
+
+        }
+
+        // Fetch data from OpenWeatherMap
+
+        const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/${endpoint}?${params}`
+        );
+
+        const data = await response.json();
+
+        // Handle API errors
+
+        if (!response.ok) {
+
+            return {
+                statusCode: response.status,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    error: data.message || "Unable to retrieve weather data."
+                })
+            };
+
+        }
+
+        // Return successful response
+
         return {
-            statusCode: response.status,
+            statusCode: 200,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        };
+
+    } catch (err) {
+
+        return {
+            statusCode: 500,
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
-                error: data.message || "Unable to retrieve weather data."
+                error: "Unable to connect to the weather service."
             })
         };
+
     }
-
-    return {
-        statusCode: 200,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    };
-
-} catch (error) {
-    return {
-        statusCode: 500,
-        body: JSON.stringify({
-            error: "Unable to connect to the weather service."
-        })
-    };
-}
-
 
 };
