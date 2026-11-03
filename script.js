@@ -56,8 +56,10 @@ async function getCurrentWeather(city) {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "City not found. Please check the city name.");
-    }
+    throw new Error(
+        data.error || data.message || "Something went wrong."
+    );
+}
 
     return data;
 }
@@ -73,8 +75,10 @@ async function getWeatherByCoordinates(lat, lon) {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Unable to retrieve weather for your location.");
-    }
+    throw new Error(
+        data.error || data.message || "Something went wrong."
+    );
+}
 
     return data;
 }
@@ -91,8 +95,10 @@ async function getForecast(lat, lon) {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Unable to retrieve forecast data.");
-    }
+    throw new Error(
+        data.error || data.message || "Something went wrong."
+    );
+}
 
     return data;
 }
