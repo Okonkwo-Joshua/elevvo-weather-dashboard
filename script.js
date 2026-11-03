@@ -10,7 +10,6 @@ const BASE_URL = "/.netlify/functions/weather";
 
 const cityInput = document.getElementById("cityInput");
 const searchBtn = document.getElementById("searchBtn");
-
 const loading = document.getElementById("loading");
 const error = document.getElementById("error");
 
@@ -32,17 +31,17 @@ const locationBtn = document.getElementById("locationBtn");
 // =====================================
 
 function showLoading() {
-loading.classList.remove("hidden");
-error.classList.add("hidden");
+    loading.classList.remove("hidden");
+    error.classList.add("hidden");
 }
 
 function hideLoading() {
-loading.classList.add("hidden");
+    loading.classList.add("hidden");
 }
 
 function showError(message) {
-error.textContent = message;
-error.classList.remove("hidden");
+    error.textContent = message;
+    error.classList.remove("hidden");
 }
 
 // =====================================
@@ -50,13 +49,16 @@ error.classList.remove("hidden");
 // =====================================
 
 async function getCurrentWeather(city) {
+
     const url = `${BASE_URL}?type=current&city=${encodeURIComponent(city)}`;
 
     const response = await fetch(url);
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "City not found. Please check the city name.");
+        throw new Error(
+            data.error || data.message || "City not found. Please check the city name."
+        );
     }
 
     return data;
@@ -67,64 +69,67 @@ async function getCurrentWeather(city) {
 // =====================================
 
 async function getWeatherByCoordinates(lat, lon) {
+
     const url = `${BASE_URL}?type=current&lat=${lat}&lon=${lon}`;
 
     const response = await fetch(url);
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Unable to retrieve weather for your location.");
+        throw new Error(
+            data.error || data.message || "Unable to retrieve weather for your location."
+        );
     }
 
     return data;
 }
 
-
 // =====================================
-// 7. FETCH 5-DAY FORECAST
+// 6. FETCH WEATHER FORECAST
 // =====================================
 
 async function getForecast(lat, lon) {
+
     const url = `${BASE_URL}?type=forecast&lat=${lat}&lon=${lon}`;
 
     const response = await fetch(url);
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Unable to retrieve forecast data.");
+        throw new Error(
+            data.error || data.message || "Unable to retrieve forecast data."
+        );
     }
 
     return data;
 }
 
 // =====================================
-// 6. DISPLAY CURRENT WEATHER
+// 7. DISPLAY CURRENT WEATHER
 // =====================================
 
 function displayCurrentWeather(data) {
-cityName.textContent = `${data.name}, ${data.sys.country}`;
 
+    cityName.textContent = `${data.name}, ${data.sys.country}`;
 
-temperature.textContent = `${Math.round(data.main.temp)}°C`;
+    temperature.textContent = `${Math.round(data.main.temp)}°C`;
 
-weatherDescription.textContent =
-    data.weather[0].description;
+    weatherDescription.textContent =
+        data.weather[0].description;
 
-weatherIcon.src =
-    `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+    weatherIcon.src =
+        `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
 
-weatherIcon.alt = data.weather[0].description;
+    weatherIcon.alt = data.weather[0].description;
 
-feelsLike.textContent =
-    `${Math.round(data.main.feels_like)}°C`;
+    feelsLike.textContent =
+        `${Math.round(data.main.feels_like)}°C`;
 
-humidity.textContent =
-    `${data.main.humidity}%`;
+    humidity.textContent =
+        `${data.main.humidity}%`;
 
-windSpeed.textContent =
-    `${data.wind.speed} m/s`;
-
-
+    windSpeed.textContent =
+        `${data.wind.speed} m/s`;
 }
 
 // =====================================
@@ -132,77 +137,91 @@ windSpeed.textContent =
 // =====================================
 
 function displayForecast(data) {
-forecastContainer.innerHTML = "";
 
+    forecastContainer.innerHTML = "";
 
-const timezoneOffset = data.city.timezone;
+    const timezoneOffset = data.city.timezone;
 
-const groupedForecasts = {};
+    const groupedForecasts = {};
 
-data.list.forEach(item => {
-    const localDate = new Date(
-        (item.dt + timezoneOffset) * 1000
-    );
+    data.list.forEach(item => {
 
-    const dateKey = localDate.toISOString().split("T")[0];
+        const localDate = new Date(
+            (item.dt + timezoneOffset) * 1000
+        );
 
-    if (!groupedForecasts[dateKey]) {
-        groupedForecasts[dateKey] = [];
+        const dateKey = localDate.toISOString().split("T")[0];
+
+        if (!groupedForecasts[dateKey]) {
+            groupedForecasts[dateKey] = [];
+        }
+
+        groupedForecasts[dateKey].push({
+            ...item,
+            localHour: localDate.getUTCHours()
+        });
+
+    });
+
+    const today = new Date(
+        (Date.now() / 1000) + timezoneOffset
+    ).toISOString().split("T")[0];
+
+    const forecastDays = Object.keys(groupedForecasts)
+        .filter(date => date > today)
+        .slice(0, 3);
+
+    forecastDays.forEach(date => {
+
+        const entries = groupedForecasts[date];
+
+        // Select the forecast closest to midday.
+
+        const selected = entries.reduce((closest, current) => {
+
+            return Math.abs(current.localHour - 12) <
+                Math.abs(closest.localHour - 12)
+                ? current
+                : closest;
+
+        });
+
+        const dayName = new Date(
+            `${date}T12:00:00Z`
+        ).toLocaleDateString("en-US", {
+            weekday: "long",
+            timeZone: "UTC"
+        });
+
+        const card = document.createElement("div");
+        card.className = "forecast-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = dayName;
+
+        const icon = document.createElement("img");
+        icon.src =
+            `https://openweathermap.org/img/wn/${selected.weather[0].icon}@2x.png`;
+        icon.alt = selected.weather[0].description;
+
+        const temp = document.createElement("h3");
+        temp.textContent = `${Math.round(selected.main.temp)}°C`;
+
+        const description = document.createElement("p");
+        description.textContent = selected.weather[0].description;
+
+        card.appendChild(heading);
+        card.appendChild(icon);
+        card.appendChild(temp);
+        card.appendChild(description);
+
+        forecastContainer.appendChild(card);
+
+    });
+
+    if (forecastDays.length === 0) {
+        forecastContainer.textContent = "Forecast unavailable.";
     }
-
-    groupedForecasts[dateKey].push({
-        ...item,
-        localHour: localDate.getUTCHours()
-    });
-});
-
-const today = new Date(
-    (Date.now() / 1000) + timezoneOffset
-).toISOString().split("T")[0];
-
-const forecastDays = Object.keys(groupedForecasts)
-    .filter(date => date > today)
-    .slice(0, 3);
-
-forecastDays.forEach(date => {
-    const entries = groupedForecasts[date];
-
-    // Select the forecast closest to midday.
-    const selected = entries.reduce((closest, current) => {
-        return Math.abs(current.localHour - 12) <
-            Math.abs(closest.localHour - 12)
-            ? current
-            : closest;
-    });
-
-    const dayName = new Date(
-        `${date}T12:00:00Z`
-    ).toLocaleDateString("en-US", {
-        weekday: "long",
-        timeZone: "UTC"
-    });
-
-    const card = document.createElement("div");
-    card.className = "forecast-card";
-
-    card.innerHTML = `
-        <h3>${dayName}</h3>
-        <img
-            src="https://openweathermap.org/img/wn/${selected.weather[0].icon}@2x.png"
-            alt="${selected.weather[0].description}"
-        >
-        <h3>${Math.round(selected.main.temp)}°C</h3>
-        <p>${selected.weather[0].description}</p>
-    `;
-
-    forecastContainer.appendChild(card);
-});
-
-if (forecastDays.length === 0) {
-    forecastContainer.textContent = "Forecast unavailable.";
-}
-
-
 }
 
 // =====================================
@@ -210,31 +229,33 @@ if (forecastDays.length === 0) {
 // =====================================
 
 async function loadWeather(city) {
-try {
-showLoading();
-hideLoading();
 
+    try {
 
-    const currentData = await getCurrentWeather(city);
+        showLoading();
 
-    displayCurrentWeather(currentData);
+        const currentData = await getCurrentWeather(city);
 
-    const forecastData = await getForecast(
-        currentData.coord.lat,
-        currentData.coord.lon
-    );
+        displayCurrentWeather(currentData);
 
-    displayForecast(forecastData);
+        const forecastData = await getForecast(
+            currentData.coord.lat,
+            currentData.coord.lon
+        );
 
-    error.classList.add("hidden");
+        displayForecast(forecastData);
 
-} catch (err) {
-    showError(err.message);
-} finally {
-    hideLoading();
-}
+        error.classList.add("hidden");
 
+    } catch (err) {
 
+        showError(err.message);
+
+    } finally {
+
+        hideLoading();
+
+    }
 }
 
 // =====================================
@@ -242,24 +263,26 @@ hideLoading();
 // =====================================
 
 searchBtn.addEventListener("click", () => {
-const city = cityInput.value.trim();
 
+    const city = cityInput.value.trim();
 
-if (!city) {
-    showError("Please enter a city name.");
-    return;
-}
+    if (!city) {
+        showError("Please enter a city name.");
+        return;
+    }
 
-loadWeather(city);
-cityInput.value = "";
+    loadWeather(city);
 
+    cityInput.value = "";
 
 });
 
 cityInput.addEventListener("keydown", event => {
-if (event.key === "Enter") {
-searchBtn.click();
-}
+
+    if (event.key === "Enter") {
+        searchBtn.click();
+    }
+
 });
 
 // =====================================
@@ -267,6 +290,7 @@ searchBtn.click();
 // =====================================
 
 async function loadPopularCities() {
+
     const cities = ["London", "New York", "Tokyo"];
 
     citiesContainer.innerHTML = "";
@@ -276,81 +300,106 @@ async function loadPopularCities() {
     );
 
     results.forEach(result => {
+
         if (result.status === "fulfilled") {
+
             const data = result.value;
 
             const card = document.createElement("div");
             card.className = "city-card";
 
-            card.innerHTML = `
-                <h3>${data.name}</h3>
+            const name = document.createElement("h3");
+            name.textContent = data.name;
 
-                <img
-                    src="https://openweathermap.org/img/wn/${data.weather[0].icon}.png"
-                    alt="${data.weather[0].description}"
-                >
+            const icon = document.createElement("img");
+            icon.src =
+                `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+            icon.alt = data.weather[0].description;
 
-                <h2>${Math.round(data.main.temp)}°C</h2>
+            const temp = document.createElement("h2");
+            temp.textContent = `${Math.round(data.main.temp)}°C`;
 
-                <p>${data.weather[0].description}</p>
+            const description = document.createElement("p");
+            description.textContent = data.weather[0].description;
 
-                <p>Humidity: ${data.main.humidity}%</p>
-            `;
+            const humidityInfo = document.createElement("p");
+            humidityInfo.textContent =
+                `Humidity: ${data.main.humidity}%`;
+
+            card.appendChild(name);
+            card.appendChild(icon);
+            card.appendChild(temp);
+            card.appendChild(description);
+            card.appendChild(humidityInfo);
 
             citiesContainer.appendChild(card);
+
         }
+
     });
+
 }
-
-
 
 // =====================================
 // 12. CURRENT LOCATION SUPPORT
 // =====================================
 
 locationBtn.addEventListener("click", () => {
-if (!navigator.geolocation) {
-showError("Geolocation is not supported by your browser.");
-return;
-}
 
+    if (!navigator.geolocation) {
 
-showLoading();
+        showError("Geolocation is not supported by your browser.");
+        return;
 
-navigator.geolocation.getCurrentPosition(
-    async position => {
-        try {
-            const { latitude, longitude } = position.coords;
-
-            const currentData = await getWeatherByCoordinates(
-                latitude,
-                longitude
-            );
-
-            displayCurrentWeather(currentData);
-
-            const forecastData = await getForecast(
-                latitude,
-                longitude
-            );
-
-            displayForecast(forecastData);
-
-            error.classList.add("hidden");
-
-        } catch (err) {
-            showError(err.message);
-        } finally {
-            hideLoading();
-        }
-    },
-
-    () => {
-        hideLoading();
-        showError("Location access was denied or unavailable.");
     }
-);
 
+    showLoading();
+
+    navigator.geolocation.getCurrentPosition(
+
+        async position => {
+
+            try {
+
+                const { latitude, longitude } = position.coords;
+
+                const currentData = await getWeatherByCoordinates(
+                    latitude,
+                    longitude
+                );
+
+                displayCurrentWeather(currentData);
+
+                const forecastData = await getForecast(
+                    latitude,
+                    longitude
+                );
+
+                displayForecast(forecastData);
+
+                error.classList.add("hidden");
+
+            } catch (err) {
+
+                showError(err.message);
+
+            } finally {
+
+                hideLoading();
+
+            }
+
+        },
+
+        () => {
+
+            hideLoading();
+
+            showError("Location access was denied or unavailable.");
+
+        }
+
+    );
 
 });
 
